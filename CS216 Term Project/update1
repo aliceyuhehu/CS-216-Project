@@ -1,0 +1,149 @@
+# Corporate Sustainability Data Analysis
+
+Research Question: Can companies be both sustainable and profitable?
+
+See Dataset and the 3 Tests We Performed Below
+
+import pandas as pd
+
+refinitiv = pd.read_csv("CS216 Data from Refinitiv.xlsx - Sheet1.csv", skiprows=0, header=0).dropna(how='all') 
+refinitiv = refinitiv.drop(0)
+df = refinitiv
+# df = df.dropna(subset=[df.columns[1]])
+refinitiv.head()
+
+
+df.loc[1] = df.loc[1].replace('FY0', 2022)
+df.loc[1] = df.loc[1].replace('FY-1', 2021)
+df.loc[1] = df.loc[1].replace('FY-2', 2020)
+df.loc[1] = df.loc[1].replace('FY-3', 2019)
+df.loc[1] = df.loc[1].replace('FY-4', 2018)
+df.loc[1] = df.loc[1].replace('FY-5', 2017)
+df.loc[1] = df.loc[1].replace('FY-6', 2016)
+df.loc[1] = df.loc[1].replace('FY-7', 2015)
+df.loc[1] = df.loc[1].replace('FY-8', 2014)
+df.loc[1] = df.loc[1].replace('FY-9', 2013)
+df.head()
+
+#filtering df for key columns
+filtered_df = refinitiv[['Company Common Name', 'ESG Score', 'Gross Profit Margin - %', 'Return on Average Total Assets - %']]
+
+#doing some calculations to find null values
+null_values = filtered_df.isna().sum()
+print(null_values)
+
+# Test 1: Correlation between ESG Score and Gross Profit Margin
+
+'''One possible hypothesis test is to examine the correlation between ESG Score and a profitability metric like Return on Average Total Assets (ROA).
+
+Hypothesis:
+Null hypothesis (H0): There is no correlation between ESG Score and Gross Profit Margin
+Alternative hypothesis (H1): There is a correlation between ESG Score and Gross Profit Margin
+
+
+This code calculates the Pearson correlation coefficient and the p-value. If the p-value is less than your chosen significance level (e.g., 0.05), you can reject the null hypothesis in favor of the alternative hypothesis, which would suggest that there is a correlation between ESG Score and Gross Profit Margin
+A positive correlation coefficient would indicate that companies with higher ESG scores tend to have higher profitability (measured by ROA), while a negative correlation coefficient would suggest the opposite.
+'''
+
+import scipy.stats as stats
+import numpy as np
+import scipy.stats as stats
+
+# Remove rows with NaN values in ESG Score and Return on Average Total Assets columns
+clean_data = filtered_df[['ESG Score', 'Gross Profit Margin - %']].dropna()
+
+# Convert columns to numeric data types
+clean_data['ESG Score'] = pd.to_numeric(clean_data['ESG Score'], errors='coerce')
+clean_data['Gross Profit Margin - %'] = pd.to_numeric(clean_data['Gross Profit Margin - %'], errors='coerce')
+
+# Remove any rows with NaN values after the conversion
+clean_data = clean_data.dropna()
+
+# Perform Pearson correlation test
+correlation_coefficient, p_value = stats.pearsonr(clean_data['ESG Score'], clean_data['Gross Profit Margin - %'])
+
+print("Correlation Coefficient:", correlation_coefficient)
+print("p-value:", p_value)
+
+#Test 2: Two-Sample T-Test
+
+'''
+Null hypothesis (H0): 
+There is no difference in the mean profitability between companies with high ESG scores and companies with low ESG scores.
+
+Alternative hypothesis (H1): 
+There is a difference in the mean profitability between companies with high ESG scores and companies with low ESG scores.
+
+Split the dataset into two groups based on their ESG scores. Use the median ESG score as a threshold to separate high and low ESG score groups. Then, we will perform a two-sample t-test using the Return on Average Total Assets (ROA) as a measure of profitability.
+If the p-value is less than your chosen significance level (e.g., 0.05), you can reject the null hypothesis in favor of the alternative hypothesis. This would suggest that there is a significant difference in the mean profitability (measured by ROA) between companies with high ESG scores and companies with low ESG scores. A positive t-statistic would indicate that companies with higher ESG scores have higher average profitability, while a negative t-statistic would suggest the opposite.
+'''
+
+import numpy as np
+import scipy.stats as stats
+
+
+# Remove rows with NaN values in ESG Score and Return on Average Total Assets columns
+clean_data = filtered_df[['ESG Score', 'Return on Average Total Assets - %']].dropna()
+
+# Convert columns to numeric data types
+clean_data['ESG Score'] = pd.to_numeric(clean_data['ESG Score'], errors='coerce')
+clean_data['Return on Average Total Assets - %'] = pd.to_numeric(clean_data['Return on Average Total Assets - %'], errors='coerce')
+
+# Remove any rows with NaN values after the conversion
+clean_data = clean_data.dropna()
+
+# Determine the median ESG score
+median_esg_score = np.median(clean_data['ESG Score'])
+
+# Split the data into two groups based on ESG scores
+high_esg = clean_data[clean_data['ESG Score'] > median_esg_score]['Return on Average Total Assets - %']
+low_esg = clean_data[clean_data['ESG Score'] <= median_esg_score]['Return on Average Total Assets - %']
+
+# Perform a two-sample t-test
+t_stat, p_value = stats.ttest_ind(high_esg, low_esg, equal_var=False)
+
+print("t-statistic:", t_stat)
+print("p-value:", p_value)
+
+#Test 3: Two-Sample T-test Gross Profit Margin and Cost
+
+'''
+H0 (null hypothesis): There is no significant difference in the gross profit margins between companies with high ESG scores and those with low ESG scores. In other words, the average gross profit margin is the same for both groups.
+
+Ha (alternative hypothesis): There is a significant difference in the gross profit margins between companies with high ESG scores and those with low ESG scores. The average gross profit margin is not the same for both groups.
+
+After performing the t-test, we obtain a p-value. If the p-value is smaller than a predetermined significance level (e.g., 0.05), we reject the null hypothesis in favor of the alternative hypothesis. This would mean that there is a significant difference in the gross profit margins between companies with high ESG scores and those with low ESG scores.
+
+If the p-value is greater than or equal to the significance level, we fail to reject the null hypothesis, which means we do not have enough evidence to conclude that there is a significant difference in the gross profit margins between the two groups.
+'''
+
+import pandas as pd
+import numpy as np
+import scipy.stats as stats
+
+# Assuming 'filtered_df' is the DataFrame you have created earlier
+
+# Remove rows with NaN values in ESG Score and Gross Profit Margin columns
+clean_data = filtered_df[['ESG Score', 'Gross Profit Margin - %']].dropna()
+
+# Convert columns to numeric data types
+clean_data['ESG Score'] = pd.to_numeric(clean_data['ESG Score'], errors='coerce')
+clean_data['Gross Profit Margin - %'] = pd.to_numeric(clean_data['Gross Profit Margin - %'], errors='coerce')
+
+# Remove any rows with NaN values after the conversion
+clean_data = clean_data.dropna()
+
+# Determine the median ESG score
+median_esg_score = np.median(clean_data['ESG Score'])
+
+# Split the data into two groups based on ESG scores
+high_esg = clean_data[clean_data['ESG Score'] > median_esg_score]['Gross Profit Margin - %']
+low_esg = clean_data[clean_data['ESG Score'] <= median_esg_score]['Gross Profit Margin - %']
+
+# Perform a two-sample t-test
+t_stat, p_value = stats.ttest_ind(high_esg, low_esg, equal_var=False)
+
+print("t-statistic:", t_stat)
+print("p-value:", p_value)
+
+
